@@ -10,7 +10,6 @@
 /**Данный скрипт позволяет просмотреть карточку клиента ( все его данные ) и удалить его из таблицы*/
 
 require_once "connect_db.php";//подключение к скрипту
-session_start();//старт сессии
 $table="SELECT * FROM Users";
 $users=$pdo->query($table);
 $kolvo_users=$users->fetchAll();
@@ -20,6 +19,7 @@ $kolvo_users=$users->fetchAll();
 <div style="padding-top: 10px">
     <!--Выбор клиента осуществлен с помощью выпадающего списка, каждое значение списка получено обращением к таблице
     -->
+
 <form action="view_client.php" method="post">
 
     <select style="font-size: 20px; border-radius: 40px;cursor: pointer" required name="number">
@@ -50,6 +50,22 @@ $kolvo_users=$users->fetchAll();
 // элемент из выпадающего списка:"Выберите клиента".
 if(isset($_REQUEST['click'])&&@$_REQUEST['number']!=0)
 {
+    $deletetable=$pdo->exec("DROP TABLE IF EXISTS Lastuser");
+    /** Создаем таблицу с выбранным клиентом*/
+    $table2="CREATE TABLE IF NOT EXISTS Lastuser(
+id INT NOT NULL,
+Surname TINYTEXT NOT NULL,
+Imya TINYTEXT NOT NULL,
+Otchestvo TINYTEXT NOT NULL,
+Birthday TINYTEXT NOT NULL,
+Sex TINYTEXT NOT NULL,
+Phone1 TINYTEXT NOT NULL,
+Phone2 TINYTEXT,
+PRIMARY KEY (id))";
+    $create_table2=$pdo->exec($table2);//выполнение SQL запроса
+    $add_to_table="INSERT INTO Lastuser VALUES (:id,:sur,:nam,:otch,:birth,:sex,:ph1,:ph2)";
+    $string=$pdo->prepare($add_to_table);
+
     $id=$_REQUEST['number'];//получаем номер id клиента, которого выбрад пользователь и записываем в перемнную
     $query = "SELECT * FROM Users WHERE id = $id";//SQL запрос, при котором указан конкретный уникальный идентификатор
     $out=$pdo->query($query);
@@ -57,15 +73,7 @@ if(isset($_REQUEST['click'])&&@$_REQUEST['number']!=0)
     foreach ($vivod as $value)
     {
         /** Запись в переменные сессии все значений из таблицы(Фамилия Имя Отчество и тд) по данному id**/
-
-        $_SESSION['fam']=$value['Surname'];
-        $_SESSION['nam']=$value['Imya'];
-        $_SESSION['otc']=$value['Otchestvo'];
-        $_SESSION['bir']=$value['Birthday'];
-        $_SESSION['tel1']=$value['Phone1'];
-        $_SESSION['tel2']=$value['Phone2'];
-
-        /*Вывод всех значений клиента найденные по id*/
+        $string->execute(['id'=>$id,'sur' => $value['Surname'], 'nam' => $value['Imya'], 'otch' => $value['Otchestvo'], 'birth' => $value['Birthday'], 'sex' => $value['Sex'], 'ph1' => $value['Phone1'],'ph2'=>$value['Phone2']]);
 
         echo "<div style='font-size: 25px;margin-left: 40%;'>";
         echo "<br>Фамилия: ".$value['Surname']."<br>Имя: ".$value['Imya']."<br>Отчество: ".$value['Otchestvo']."<br>Дата рождения: ".$value['Birthday']."<br>Пол: ".$value['Sex']."<br> Дата создания клиента: ".$value['Date_Create']."<br> Дата обновления клиента: ".$value['Date_Update']."<br>Телефон основной: ".$value['Phone1']."<br>Телефон доп.: ".$value['Phone2'];
@@ -77,17 +85,19 @@ if(isset($_REQUEST['click'])&&@$_REQUEST['number']!=0)
     echo "<br><br><center><form action='view_client.php' method='post'>
 <input type='submit' value='Удалить клиента' name='Delet' style='font-size: 20px;border-radius: 4px;cursor: pointer'>
 </form><br><br>
-<form action='edit_client.php' method='post'>
+<form action='add_client.php' method='post'>
 <input type='submit' value='Редактировать клиента' name='Update' style='font-size: 20px;border-radius: 4px;cursor: pointer'>
 </form></center>";
 
-    $_SESSION['id_clienta']=$id;//Запись в перемнную сессии id клиента, чтобы использовать в других скриптах
 }
 
 //Если нажата кнопка Удалить клиента, то запускается функция, которая принимает два аргумента
 
 if(isset($_REQUEST['Delet'])) {
-    Delete($pdo, $_SESSION['id_clienta']);
+    $y="SELECT id FROM Lastuser ORDER BY id DESC LIMIT 1";
+    $x=$pdo->query($y);
+    $z=$x->fetchColumn();
+    Delete($pdo, $z);
 }
 
 function Delete($pdo,$cnt)
