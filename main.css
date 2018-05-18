@@ -1,0 +1,28 @@
+.addclient{
+    position: center;
+    font-size: 30px;
+}
+body{
+    background: url("fon.jpg") no-repeat center center fixed;
+    /*background-image: url("fon.jpg");
+    background-size: cover;*/
+    -webkit-background-size: cover;
+    -moz-background-size: cover;
+    -o-background-size: cover;
+    background-size: cover;
+}
+.mainbutton
+{
+    border: 1px solid #333; /* Рамка */
+    display: inline-block;
+    padding: 5px 15px; /* Поля */
+    text-decoration: none;
+    background-color: blanchedalmond;
+    border-radius: 9px;
+    color: #a42323;
+    font-size: 30px;
+}
+.mainbutton:hover{
+    background-color: gold;
+    color: black;
+}
